@@ -23,19 +23,19 @@ provides: [Elements.from, Elements.From, Element.from]
 ...
 */
 
-Element.from = function(obj){
-	obj = Elements.from(obj)[0];
-	if (obj instanceof Element) return obj;
-	return null;
+Element.from = function(object, excludeScripts){
+	if(typeOf(object) == 'element') return object;
+	object = Elements.from(object, excludeScripts)[0];
+	return typeOf(object) == 'element' ? object : null;
 };
 
-Elements.from = function(obj, excludeScripts){
-	if (obj instanceof Elements) return obj;
+Elements.from = function(object, excludeScripts){
+	if (object instanceof Elements) return object;
 
-	var type = typeOf(obj);	
+	var type = typeOf(object);	
 	if(type == 'string'){
-		if (excludeScripts || excludeScripts == null) obj = obj.stripScripts();
-		var container, match = obj.match(/^\s*<(t[dhr]|tbody|tfoot|thead)/i);
+		if (excludeScripts || excludeScripts == null) object = object.stripScripts();
+		var container, match = object.match(/^\s*<(t[dhr]|tbody|tfoot|thead)/i);
 
 		if (match){
 			container = new Element('table');
@@ -46,13 +46,13 @@ Elements.from = function(obj, excludeScripts){
 			}
 		}
 
-		return (container || new Element('div')).set('html', obj).getChildren();		
+		return (container || new Element('div')).set('html', object).getChildren();		
 	}
 
-	if (typeof obj.toElement == 'function') return new Elements([document.id(obj)]);
-	if (Type.isEnumerable(obj)) return new Elements(obj);
-	if (type == 'element') return new Elements([obj]);
-	if (type == 'object') return new Elements(Object.values(obj));
+	if (typeof object.toElement == 'function') return new Elements([document.id(object)]);
+	if (Type.isEnumerable(object)) return new Elements(object);
+	if (type == 'element') return new Elements([object]);
+	if (type == 'object') return new Elements(Object.values(object));
 
 	return new Elements;
 };
