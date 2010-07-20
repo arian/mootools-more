@@ -24,16 +24,16 @@ provides: [Elements.from, Elements.From, Element.from]
 */
 
 Element.from = function(object, excludeScripts){
-	if(typeOf(object) == 'element') return object;
+	if (typeOf(object) == 'element') return object;
 	object = Elements.from(object, excludeScripts)[0];
 	return typeOf(object) == 'element' ? object : null;
 };
 
 Elements.from = function(object, excludeScripts){
-	if (object instanceof Elements) return object;
+	if (typeOf(object) == 'elements') return object;
 
 	var type = typeOf(object);	
-	if(type == 'string'){
+	if (type == 'string'){
 		if (excludeScripts || excludeScripts == null) object = object.stripScripts();
 		var container, match = object.match(/^\s*<(t[dhr]|tbody|tfoot|thead)/i);
 
