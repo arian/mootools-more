@@ -40,7 +40,7 @@ div.spanner {
 <script src="/depender/build?require=More/Fx.Sort,Core/Element.Event,Core/Fx.Transitions"></script>
 
 <script type="text/javascript">
-	
+
 var vert = new Fx.Sort($$('#sorter li'), {
 	transition: Fx.Transitions.Back.easeInOut,
 	duration: 1000
@@ -52,49 +52,52 @@ var horz = new Fx.Sort($$('.spanner'), {
 	duration: 1000
 });
 
-makeActions([
-	{
-		title: "Reverses the order of the lists to 5,4,3,2,1",
+var TESTS = {
+	backward: {
+		title: "Backward the order of the lists to 5,4,3,2,1",
 		fn: function(){
 			vert.backward();
 			(function(){horz.backward();}).delay(1000);
 		}
 	},
-	{
+	reset: {
 		title: "Resets the order of the lists to 1,2,3,4,5",
 		fn: function(){
 			vert.forward();
 			(function(){horz.forward();}).delay(1000);
 		}
 	},
-	{
-		title: "Sets the order of the lists to 5,2,4,3,1",
+	sort: {
+		title: "Sorts the order of the lists to 5,2,4,3,1",
 		fn: function(){
 			vert.sort([4,1,3,2,0]);
 			(function(){horz.sort([4,1,3,2,0]);}).delay(1000);
 		}
 	},
-	{
+	swap: {
 		title: "Swaps the position of 1 and 5",
 		fn: function(){
 			vert.swap(0,4);
 			(function(){horz.swap(0,4);}).delay(1000);
 		}
 	},
-	{
+	reverse: {
 		title: "Reverses the order of the lists",
 		fn: function(){
 			vert.reverse();
 			(function(){horz.reverse();}).delay(1000);
 		}
 	},
-	{
+	reorder: {
 		title: "Reorders the DOM to match the current sort order.",
 		description: "(No visible effect; inspect in firebug.)", 
 		fn: function(){
 			vert.rearrangeDOM();
 		}
 	}
-]);
+};
 
+makeActions(Object.values(TESTS));
 </script>
+
+<script src="/Tests/Fx/Fx.Sort-specs.js"></script>

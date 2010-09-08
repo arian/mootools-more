@@ -46,18 +46,19 @@ img {
 </div>
 
 <script src="/depender/build?require=More/Tips"></script>
+<script src="/Tests/Interface/Tips-specs.js"></script>
 <script>
 
 new Tips($$('.toolTipElement'), {
 	timeOut: 700,
 	maxTitleChars: 50, /* I like my captions a little long*/
-	maxOpacity: .9 /* let's leave a little transparancy in there */
+	maxOpacity: .9 /* let's leave a little transparency in there */
 });
 
 new Tips($$('.toolTipElement2'), {
 	timeOut: 700,
 	maxTitleChars: 50, /* I like my captions a little long*/
-	maxOpacity: .9, /* let's leave a little transparancy in there */
+	maxOpacity: .9, /* let's leave a little transparency in there */
 	fixed: true,
 	offset: {
 		x: 10,
