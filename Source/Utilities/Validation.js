@@ -1,7 +1,7 @@
 /*
 ---
 
-name: Validate
+name: Validation
 
 description: A Validation System
 
@@ -14,14 +14,14 @@ requires:
   - Core/Class
   - Core/Object
 
-provides: [Validate]
+provides: [Validation]
 
 ...
 */
 
 (function(){
 
-var Validate = this.Validate = new Class({
+var Validation = this.Validation = new Class({
 
 	Implements: Options,
 
@@ -29,105 +29,121 @@ var Validate = this.Validate = new Class({
 		allowEmpty: false
 	},
 
-	validators: {},
+	tests: [],
+	testsArgs: [],
 
-	initialize: function(value, validators, options){
+	initialize: function(tests, options){
 		this.setOptions(options);
-		this.addValidators(Array.from(validators));
+		this.addTests(tests);
 	},
 
-	addValidator: function(validator){
-		var type = typeOf(validator);
-		if (type == 'function'){
-			validator = {
-				name: String.generateUID(),
-				test: validator
-			};
-		} else if (type == 'string' && Validate.Validators[validator]){
-			validator = Validate.Validators[validator];
-		} else if (arguments.length > 1){
-			validator = Array.associate(arguments, ['name', 'test', 'error']);
+	addTest: function(test){
+		if (Type.isString(test)) test = Validation.Tests[tests];
+		if (test && !this.tests.contain(test)){
+			this.tests.push(test);
+			this.testsArgs.push(Array.slice(arguments, 1));
 		}
-		if (!validator.error) validator.error = getMsg(validator.name);
-
-		this.validators[validator.name] = validator;
 	},
 
-	addValidators: function(validators){
-		Object.each(validators, this.addValidator.bind(this));
+	addTests: function(tests){
+		for (var i = 0, l = tests.length; i < l; i++)
+			this.addTest(tests[i]);
 	},
 
-	getValidatorError: function(name, args){
-		return Function.from(this.validators[name].error).apply(null, args);
-	};
+	isValid: function(value, allowEmpty){
+		var errors = this.errors = [];
 
-	isValid: function(value){
-		var args = Array.slice(arguments, 1);
+		if (allowEmpty || (allowEmpty == null && this.options.allowEmpty)){
+			if (Validation.Tests['isEmpty'](value)) return true;
+		}
 
-		var errors = {};
-		Object.each(this.validators, function(validator, name){
+		var tests = this.tests,
+			result,
+			args;
 
-			var testArgs = [value].concat(args);
-			if ((this.options.allowEmpty && Validate.Validators.IsEmpty(value)) || !validator.test.apply(null, testArgs))
-				errors[name] = this.getValidateError(name, testArgs);
-
-		}, this);
+		for (var i = 0, l = tests.length; i < l; i++){
+			args = this.testsArgs[i];
+			result = tests[i].call(null, value, args);
+			if (result != true) errors.push([result, value, args]);
+		}
 
 		this.errors = errors;
-		return Object.getLength(errors);
+		return !errors.length;
+	},
+
+	getErrorCodes: function(){
+		return this.errors || [];
 	},
 
 	getErrors: function(){
-		return this.errors;
+		return this.getErrorCodes().map(function(value){
+			return getValidationLocale('errors.' + value[0], value[1], value[2]);
+		});
 	}
+
 
 });
 
-
 // Localization
-var locale = Validate.Locale = 'Validator';
-var getMsg = Validate.getMsg = function(name){
-	if (Locale) return Locale.get(locale + '.' + name);
-	return 'Could not validate with ' + name;
-};
+if (this.Locale){
+
+	var getValidationLocale = function(key, value, args){
+		if (!args) args = {};
+		args.value = value;
+		return Locale.get('Validation.' + key, args).substitute(args);
+	}
+
+	var localizedTests = ['postcode'],
+		trueFunction = Function.from(true);
+
+	Locale.addEvent('change', function(){
+		var test,
+			l = localizedTests.length;
+
+		while (l--){
+			test = Locale.get('Validation.tests.' + localizedTests[l]);
+			Validation.Validators[l] = test || trueFunction;
+		}
+	});
+
+} else {
+	var getValidationLocale = function(value){
+		return value;
+	};
+}
 
 
 // Define Validators
-Validate.Validators = {};
+Validation.Tests = {};
 
-Validate.defineValidator = function(name, fn, error){
-	Validate.Validators[name] = {
-		name: name,
-		test: fn,
-		error: error
-	};
+Validation.defineTest = function(name, fn){
+	Validate.Validators[name] = fn;
 };
 
-Validate.defineValidator('IsEmpty', function(value){
-	return value == null || value == '';
+Validation.defineTest('isEmpty', function(value){
+	return (value == null || value == '') || 'isEmpty';
 });
 
-Validate.defineValidators = function(validators){
-	Object.each(validators, function(args, name){
-		Validate.defineValidator.apply(null, [name].concat(Array.from(args)));
-};
+Validation.defineTests = Validation.defineTest.overloadSetter();
 
-Validate.defineValidators({
 
-	isBetween: function(value, min, max){
-		return value > min && value < max;
+// Defining default validators (probably only very basic, and provide additional tests in a separate file)
+Validation.defineTests({
+
+	isBetween: function(value, args){
+		return (value > args.min && value < args.max) || 'isBetween';
 	},
 
-	minLength: function(value, min){
-		return value.length >= min;
+	minLength: function(value, args){
+		return (value.length >= args.min) || 'minLength';
 	},
 
-	maxLength: function(value, max){
-		return value.length <= max;
+	maxLength: function(value, args){
+		return (value.length <= args.max) || 'maxLength;
 	},
 
 	email: function(value){
-		return (/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i).test(value);
+		return (/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i).test(value) || 'email';
 	}
 
 });
