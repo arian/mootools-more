@@ -34,12 +34,12 @@ var Validation = this.Validation = new Class({
 
 	initialize: function(tests, options){
 		this.setOptions(options);
-		this.addTests(tests);
+		if (tests) this.addTests(tests);
 	},
 
 	addTest: function(test){
-		if (Type.isString(test)) test = Validation.Tests[tests];
-		if (test && !this.tests.contain(test)){
+		if (Type.isString(test)) test = Validation.Tests[test];
+		if (test && !this.tests.contains(test)){
 			this.tests.push(test);
 			this.testsArgs.push(Array.slice(arguments, 1));
 		}
@@ -84,40 +84,12 @@ var Validation = this.Validation = new Class({
 
 });
 
-// Localization
-if (this.Locale){
 
-	var getValidationLocale = function(key, value, args){
-		if (!args) args = {};
-		args.value = value;
-		return Locale.get('Validation.' + key, args).substitute(args);
-	}
-
-	var localizedTests = ['postcode'],
-		trueFunction = Function.from(true);
-
-	Locale.addEvent('change', function(){
-		var test,
-			l = localizedTests.length;
-
-		while (l--){
-			test = Locale.get('Validation.tests.' + localizedTests[l]);
-			Validation.Validators[l] = test || trueFunction;
-		}
-	});
-
-} else {
-	var getValidationLocale = function(value){
-		return value;
-	};
-}
-
-
-// Define Validators
+// Define Validation Tests
 Validation.Tests = {};
 
 Validation.defineTest = function(name, fn){
-	Validate.Validators[name] = fn;
+	Validation.Tests[name] = fn;
 };
 
 Validation.defineTest('isEmpty', function(value){
@@ -127,7 +99,7 @@ Validation.defineTest('isEmpty', function(value){
 Validation.defineTests = Validation.defineTest.overloadSetter();
 
 
-// Defining default validators (probably only very basic, and provide additional tests in a separate file)
+// Defining default tests (probably only very basic, and provide additional tests in a separate file)
 Validation.defineTests({
 
 	isBetween: function(value, args){
@@ -139,7 +111,7 @@ Validation.defineTests({
 	},
 
 	maxLength: function(value, args){
-		return (value.length <= args.max) || 'maxLength;
+		return (value.length <= args.max) || 'maxLength';
 	},
 
 	email: function(value){
@@ -147,5 +119,39 @@ Validation.defineTests({
 	}
 
 });
+
+
+//Localization
+if (this.Locale){
+
+	var getValidationLocale = function(key, value, args){
+		if (!args) args = {};
+		args.value = value;
+		return Locale.get('Validation.' + key, args).substitute(args);
+	}
+
+	var localizedTests = ['postcode'],
+		trueFunction = Function.from(true);
+
+	var setLocalizedTests = function(){
+		var test,
+			l = localizedTests.length;
+
+		while (l--){
+			test = Locale.get('Validation.tests.' + localizedTests[l]);
+			Validation.Tests[localizedTests[l]] = test || trueFunction;
+		}
+	};
+
+	setLocalizedTests();
+
+	Locale.addEvent('change', setLocalizedTests);
+
+} else {
+	var getValidationLocale = function(value){
+		return value;
+	};
+}
+
 
 })();

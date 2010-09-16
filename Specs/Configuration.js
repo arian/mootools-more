@@ -154,7 +154,9 @@ Configuration.source = {
 
 			'Utilities/Color',
 			'Utilities/Group',
-			'Utilities/Table'
+			'Utilities/Table',
+
+			'Utilities/Validation'
 
 		]
 	},
