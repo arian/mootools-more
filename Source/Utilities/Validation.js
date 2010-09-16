@@ -29,41 +29,41 @@ var Validation = this.Validation = new Class({
 		allowEmpty: false
 	},
 
-	tests: [],
-	testsArgs: [],
+	rules: [],
+	rulesArgs: [],
 
-	initialize: function(tests, options){
+	initialize: function(rules, options){
 		this.setOptions(options);
-		if (tests) this.addTests(tests);
+		if (rules) this.addRules(rules);
 	},
 
-	addTest: function(test){
-		if (Type.isString(test)) test = Validation.Tests[test];
-		if (test && !this.tests.contains(test)){
-			this.tests.push(test);
-			this.testsArgs.push(Array.slice(arguments, 1));
+	addRule: function(rule){
+		if (Type.isString(rule)) rule = Validation.Rules[rule];
+		if (rule && !this.rules.contains(rule)){
+			this.rules.push(rule);
+			this.rulesArgs.push(Array.slice(arguments, 1));
 		}
 	},
 
-	addTests: function(tests){
-		for (var i = 0, l = tests.length; i < l; i++)
-			this.addTest(tests[i]);
+	addRules: function(rules){
+		for (var i = 0, l = rules.length; i < l; i++)
+			this.addRule(rules[i]);
 	},
 
 	isValid: function(value, allowEmpty){
 		var errors = this.errors = [];
 
 		if (allowEmpty || (allowEmpty == null && this.options.allowEmpty)){
-			if (Validation.Tests['isEmpty'](value)) return true;
+			if (Validation.Rules['isEmpty'](value)) return true;
 		}
 
-		var tests = this.tests,
+		var rules = this.rules,
 			result,
 			args;
 
-		for (var i = 0, l = tests.length; i < l; i++){
-			args = this.testsArgs[i];
-			result = tests[i].call(null, value, args);
+		for (var i = 0, l = rules.length; i < l; i++){
+			args = this.rulesArgs[i];
+			result = rules[i].call(null, value, args);
 			if (result != true) errors.push([result, value, args]);
 		}
 
@@ -85,22 +85,22 @@ var Validation = this.Validation = new Class({
 });
 
 
-// Define Validation Tests
-Validation.Tests = {};
+// Define Validation Rules
+Validation.Rules = {};
 
-Validation.defineTest = function(name, fn){
-	Validation.Tests[name] = fn;
+Validation.defineRule = function(name, fn){
+	Validation.Rules[name] = fn;
 };
 
-Validation.defineTest('isEmpty', function(value){
+Validation.defineRule('isEmpty', function(value){
 	return (value == null || value == '') || 'isEmpty';
 });
 
-Validation.defineTests = Validation.defineTest.overloadSetter();
+Validation.defineRules = Validation.defineRule.overloadSetter();
 
 
-// Defining default tests (probably only very basic, and provide additional tests in a separate file)
-Validation.defineTests({
+// Defining default rules (probably only very basic, and provide additional rules in a separate file)
+Validation.defineRules({
 
 	isBetween: function(value, args){
 		return (value > args.min && value < args.max) || 'isBetween';
@@ -130,22 +130,22 @@ if (this.Locale){
 		return Locale.get('Validation.' + key, args).substitute(args);
 	}
 
-	var localizedTests = ['postcode'],
+	var localizedRules = ['postcode'],
 		trueFunction = Function.from(true);
 
-	var setLocalizedTests = function(){
-		var test,
-			l = localizedTests.length;
+	var setLocalizedRules = function(){
+		var rule,
+			l = localizedRules.length;
 
 		while (l--){
-			test = Locale.get('Validation.tests.' + localizedTests[l]);
-			Validation.Tests[localizedTests[l]] = test || trueFunction;
+			rule = Locale.get('Validation.rules.' + localizedRules[l]);
+			Validation.Rules[localizedRules[l]] = rule || trueFunction;
 		}
 	};
 
-	setLocalizedTests();
+	setLocalizedRules();
 
-	Locale.addEvent('change', setLocalizedTests);
+	Locale.addEvent('change', setLocalizedRules);
 
 } else {
 	var getValidationLocale = function(value){

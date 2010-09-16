@@ -28,7 +28,7 @@ Locale.define('nl-NL', 'Validation', {
 		postcode: 'De opgegeven postcode is niet geldig'
 	},
 
-	tests: {
+	rules: {
 		postcode: function(value){
 			return (/^[1-9]{1}[0-9]{3}\s?[A-Za-z]{2}$/).test(value) || 'postcode';
 		}
