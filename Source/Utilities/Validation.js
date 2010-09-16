@@ -64,7 +64,7 @@ var Validation = this.Validation = new Class({
 			this.addFilter(filters[i]);
 	},
 
-	isValid: function(value, allowEmpty){
+	validate: function(value, allowEmpty){
 		var errors = this.errors = [];
 
 		if (allowEmpty || (allowEmpty == null && this.options.allowEmpty)){
