@@ -12,7 +12,7 @@ authors:
 
 requires:
   - Locale
-  - Validation
+  - Validation.Locale
 
 provides: [Locale.nl-NL.Validation]
 
@@ -34,4 +34,6 @@ Locale.define('nl-NL', 'Validation', {
 		}
 	}
 
+}).setOptions({
+	runFunctions: false
 });

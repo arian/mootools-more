@@ -99,6 +99,12 @@ Object.append(Locale, new Events);
 
 Locale.Set = new Class({
 
+	Implements: Options,
+
+	options: {
+		runFunctions: true
+	},
+
 	sets: {},
 
 	inherits: {
@@ -127,7 +133,7 @@ Locale.Set = new Class({
 		var value = Object.getFromPath(this.sets, key);
 		if (value != null){
 			var type = typeOf(value);
-			if (type == 'function') value = value.apply(null, Array.from(args));
+			if (this.options.runFunctions && type == 'function') value = value.apply(null, Array.from(args));
 			else if (type == 'object') value = Object.clone(value);
 			return value;
 		}

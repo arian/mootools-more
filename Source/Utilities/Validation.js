@@ -75,10 +75,11 @@ var Validation = this.Validation = new Class({
 		return this.errors || [];
 	},
 
-	getErrors: function(){
-		return this.getErrorCodes().map(function(value){
-			return getValidationLocale('errors.' + value[0], value[1], value[2]);
-		});
+	getErrors: function(fn){
+		if (!fn) fn = function(error){
+			return error[0];
+		};
+		return this.getErrorCodes().map(fn);
 	}
 
 
@@ -119,39 +120,5 @@ Validation.defineRules({
 	}
 
 });
-
-
-//Localization
-if (this.Locale){
-
-	var getValidationLocale = function(key, value, args){
-		if (!args) args = {};
-		args.value = value;
-		return Locale.get('Validation.' + key, args).substitute(args);
-	}
-
-	var localizedRules = ['postcode'],
-		trueFunction = Function.from(true);
-
-	var setLocalizedRules = function(){
-		var rule,
-			l = localizedRules.length;
-
-		while (l--){
-			rule = Locale.get('Validation.rules.' + localizedRules[l]);
-			Validation.Rules[localizedRules[l]] = rule || trueFunction;
-		}
-	};
-
-	setLocalizedRules();
-
-	Locale.addEvent('change', setLocalizedRules);
-
-} else {
-	var getValidationLocale = function(value){
-		return value;
-	};
-}
-
 
 })();

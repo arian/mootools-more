@@ -139,6 +139,7 @@ Configuration.source = {
 			'Locale/Locale.en-US.Date',
 			'Locale/Locale.fr-FR.Date',
 			'Locale/Locale.en-US.Number',
+			'Locale/Locale.nl-NL.Validation',
 
 
 			'Types/Array.Extras',
@@ -156,7 +157,8 @@ Configuration.source = {
 			'Utilities/Group',
 			'Utilities/Table',
 
-			'Utilities/Validation'
+			'Utilities/Validation',
+			'Utilities/Validation.Locale'
 
 		]
 	},
