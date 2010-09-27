@@ -41,11 +41,11 @@ var Validation = this.Validation = new Class({
 
 	},
 
-	addRule: function(rule){
+	addRule: function(rule, args){
 		if (Type.isString(rule)) rule = Validation.Rules[rule];
 		if (rule && !this.rules.contains(rule)){
 			this.rules.push(rule);
-			this.rulesArgs.push(Array.slice(arguments, 1));
+			this.rulesArgs.push(args);
 		}
 	},
 
@@ -68,7 +68,7 @@ var Validation = this.Validation = new Class({
 		var errors = this.errors = [];
 
 		if (allowEmpty || (allowEmpty == null && this.options.allowEmpty)){
-			if (Validation.Rules['isEmpty'](value)) return true;
+			if (Validation.Rules['empty'](value)) return true;
 		}
 
 		for (var i = 0, l = this.filters.length; i < l; i++)
@@ -106,11 +106,13 @@ var Validation = this.Validation = new Class({
 Validation.Rules = {};
 
 Validation.defineRule = function(name, fn){
-	Validation.Rules[name] = fn;
+	Validation.Rules[name] = function(){
+		return fn.apply(null, arguments) || name;
+	};
 };
 
-Validation.defineRule('isEmpty', function(value){
-	return (value == null || value == '') || 'isEmpty';
+Validation.defineRule('empty', function(value){
+	return (value == null || value == '');
 });
 
 Validation.defineRules = Validation.defineRule.overloadSetter();
@@ -119,22 +121,21 @@ Validation.defineRules = Validation.defineRule.overloadSetter();
 // Defining default rules (probably only very basic, and provide additional rules in a separate file)
 Validation.defineRules({
 
-	isBetween: function(value, args){
-		return (value > args.min && value < args.max) || 'isBetween';
+	required: function(value){
+		return value != null && value != '';
+	},
+
+	between: function(value, args){
+		return (value > args.min && value < args.max);
 	},
 
 	minLength: function(value, args){
-		return (value.length >= args.min) || 'minLength';
+		return (value.length >= args.min);
 	},
 
 	maxLength: function(value, args){
-		return (value.length <= args.max) || 'maxLength';
-	},
-
-	email: function(value){
-		return (/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i).test(value) || 'email';
+		return (value.length <= args.max);
 	}
-
 });
 
 })();

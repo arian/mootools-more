@@ -158,7 +158,8 @@ Configuration.source = {
 			'Utilities/Table',
 
 			'Utilities/Validation',
-			'Utilities/Validation.Locale'
+			'Utilities/Validation.Locale',
+			'Utilities/Validation.Validators'
 
 		]
 	},
