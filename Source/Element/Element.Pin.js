@@ -40,12 +40,6 @@ provides: [Element.Pin]
 		return supported;			
 	};
 
-	var getPositionRelativeToParent = function(el){
-		var parent = el.getParent(),
-			offsetParent = (parent.getComputedStyle('position') != 'static' ? parent : parent.getOffsetParent());
-		return el.getPosition(offsetParent);
-	};
-
 	Element.implement({
 
 		pin: function(enable, forceScroll){
@@ -54,29 +48,32 @@ provides: [Element.Pin]
 
 			if (supportsPositionFixed == null) supportsPositionFixed = testCssPostionFixed();
 
+			var scroll = scroll = window.getScroll();
 
 			if (supportsPositionFixed && !forceScroll){
 
-				var pinnedPosition = this.getPosition(document.body),
-					scroll = window.getScroll();
+				var position = this.getPosition(document.body);
 				var currentPosition = {
-					top: pinnedPosition.y - scroll.y,
-					left: pinnedPosition.x - scroll.x
+					top: position.y - scroll.y,
+					left: position.x - scroll.x
 				};
 				this.setStyle('position', 'fixed').setStyles(currentPosition);
 
-			} else {
+			}/*<ie6>*/ else {
 
-				var position = getPositionRelativeToParent(this);
+				var parent = this.getOffsetParent(),
+					position = this.getPosition(parent),
+					styles = this.getStyles('left', 'top');
 
-				this.setStyles({
-					position: 'absolute',
-					top: position.y,
-					left: position.x
-				});
+				if (parent && styles.left == 'auto' || styles.top == 'auto') this.setPosition(position);
+				if (this.getStyle('position') == 'static') this.setStyle('position', 'absolute');
+
+				var position = {
+					x: styles.left.toInt() - scroll.x,
+					y: styles.top.toInt() - scroll.y
+				};
 
 				var scrollFixer = function(){
-					$('foo').set('text', 'scrolling');
 					if (!this.retrieve(pinStore)) return;
 					var scroll = window.getScroll();
 					this.setStyles({
@@ -87,7 +84,7 @@ provides: [Element.Pin]
 
 				this.store(pinStoreByJS, scrollFixer);
 				window.addEvent('scroll', scrollFixer);
-			}
+			}/*</ie6>*/
 
 			this.addClass('isPinned').store(pinStore, true);
 
@@ -101,7 +98,9 @@ provides: [Element.Pin]
 			if (jsPin){
 				window.removeEvent('scroll', jsPin);
 			} else {
-				var position = getPositionRelativeToParent(this),
+				var parent = this.getParent(),
+					offsetParent = (parent.getComputedStyle('position') != 'static' ? parent : parent.getOffsetParent()),
+					position = this.getPosition(offsetParent),
 					scroll = window.getScroll();
 
 				this.setStyles({
