@@ -21,16 +21,22 @@ requires:
   - Core/JSON
   - /Locale
   - /Class.Binds
-  - /Date
   - /Element.Forms
   - /Locale.en-US.Form.Validator
   - /Element.Shortcuts
+  - Validation
+  - Validation.Validators
+  - Validation.Locale
+  - Locale.en-US.Validation
 
 provides: [Form.Validator, InputValidator, FormValidator.BaseValidators]
 
 ...
 */
-if (!window.Form) window.Form = {};
+
+(function(){
+
+if (!this.Form) this.Form = {};
 
 var InputValidator = this.InputValidator = new Class({
 
@@ -321,7 +327,8 @@ Form.Validator.adders = {
 	},
 
 	getValidator: function(className){
-		return this.validators[className.split(':')[0]];
+		var validatorName = className.split(':')[0];
+		return this.validators[validatorName];
 	}
 
 };
@@ -329,6 +336,7 @@ Form.Validator.adders = {
 Object.append(Form.Validator, Form.Validator.adders);
 
 Form.Validator.implement(Form.Validator.adders);
+
 
 Form.Validator.add('IsEmpty', {
 
@@ -342,17 +350,43 @@ Form.Validator.add('IsEmpty', {
 
 });
 
+Form.Validator.add('required', {
+	errorMsg: function(){
+		return Form.Validator.getMsg('required');
+	},
+	test: function(element){
+		return !Form.Validator.getValidator('IsEmpty').test(element);
+	}
+});
+
+// Validators used from the Validation Class.
+Form.Validator.addAllThese(validationValidators = [
+	'minLength',
+	'maxLenth',
+	'validate-integer'
+].map(function(name){
+	var shortName = (name.substr(0, 9) == 'validate-') ? name.substr(9) : name;
+	var result = [name, {
+		errorMsg: function(element, props){
+			var validation = element.retrieve('$moo:validationInstance');
+			var error = validation.getErrors()[0];
+			if (!error) error = Form.Validator.getMsg(shortName).substitute(props);
+			console.log(error);
+			return error;
+		},
+		test: function(element, props){
+			var validation = new Validation();
+			validation.addRule(shortName, props);
+			element.store('$moo:validationInstance', validation);
+			return validation.validate(element.get('value'));
+		}
+	}];
+	return result;
+}));
+
 Form.Validator.addAllThese([
 
-	['required', {
-		errorMsg: function(){
-			return Form.Validator.getMsg('required');
-		},
-		test: function(element){
-			return !Form.Validator.getValidator('IsEmpty').test(element);
-		}
-	}],
-
+/*
 	['minLength', {
 		errorMsg: function(element, props){
 			if (typeOf(props.minLength) != 'null')
@@ -383,7 +417,7 @@ Form.Validator.addAllThese([
 			return Form.Validator.getValidator('IsEmpty').test(element) || (/^(-?[1-9]\d*|0)$/).test(element.get('value'));
 		}
 	}],
-
+*/
 	['validate-numeric', {
 		errorMsg: Form.Validator.getMsg.pass('numeric'),
 		test: function(element){
@@ -517,7 +551,8 @@ Element.implement({
 
 //<1.2compat>
 //legacy
-var FormValidator = Form.Validator;
+this.FormValidator = Form.Validator;
 //</1.2compat>
 
 
+}).call(this);
