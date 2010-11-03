@@ -130,11 +130,11 @@ Validation.defineRules({
 	},
 
 	minLength: function(value, args){
-		return (value.length >= args.min);
+		return (value.length >= args.minLength);
 	},
 
 	maxLength: function(value, args){
-		return (value.length <= args.max);
+		return (value.length <= args.maxLength);
 	}
 });
 
