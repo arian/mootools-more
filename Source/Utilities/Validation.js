@@ -26,19 +26,15 @@ var Validation = this.Validation = new Class({
 	Implements: Options,
 
 	options: {
-		allowEmpty: false/*
-		filters: []*/
+		allowEmpty: false
 	},
 
 	rules: [],
 	rulesArgs: [],
-	filters: [],
 
 	initialize: function(rules, options){
 		this.setOptions(options);
 		if (rules) this.addRules(Array.from(rules));
-		if (this.options.filters) this.addFilters(this.options.filters);
-
 	},
 
 	addRule: function(rule, args){
@@ -54,25 +50,12 @@ var Validation = this.Validation = new Class({
 			this.addRule(rules[i]);
 	},
 
-	addFilter: function(filter){
-		if (Type.isString(filter)) filter = String.prototype[filter];
-		if (filter) this.filters.push(filter);
-	},
-
-	addFilters: function(filters){
-		for (var i = 0, l = filters.length; i < l; i++)
-			this.addFilter(filters[i]);
-	},
-
 	validate: function(value, allowEmpty){
 		var errors = this.errors = [];
 
 		if (allowEmpty || (allowEmpty == null && this.options.allowEmpty)){
 			if (Validation.Rules['empty'](value)) return true;
 		}
-
-		for (var i = 0, l = this.filters.length; i < l; i++)
-			value = this.filters[i].call(value, value);
 
 		var rules = this.rules,
 			result,

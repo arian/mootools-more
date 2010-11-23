@@ -38,23 +38,6 @@ describe('Validation', function(){
 		expect(spy).toHaveBeenCalledWith(value, args);
 	});
 
-	it('should filter a string before validating', function(){
-		var spy = jasmine.createSpy('MyTestingFilterRule');
-
-		Validation.defineRule('MyTestingFilterRule', function(value){
-			spy(value); // only need to test the first argument
-		});
-
-		var validation = new Validation('MyTestingFilterRule');
-		validation.addFilter('trim');
-		validation.addFilter(function(value){
-			return value.toUpperCase();
-		});
-		validation.validate(' hello ');
-
-		expect(spy).toHaveBeenCalledWith('HELLO');
-	});
-
 	it('should return a array with the failed rules', function(){
 		Validation.defineRules({
 			MyErrorNamesTest1: Function.from(false),
