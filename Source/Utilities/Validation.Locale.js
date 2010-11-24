@@ -24,9 +24,9 @@ provides: [Validation.Locale]
 // Errors
 Validation.implement('getErrors', function(fn){
 	if (!fn) fn = function(error){
-		var args = error[2] || {};
-		args.value = error[1];
-		return Locale.get('Validation.' + error[0], args).substitute(args);
+		var args = error.args || {};
+		args.value = error.value;
+		return Locale.get('Validation.' + error.name, args).substitute(args);
 	};
 	return this.getErrorCodes().map(fn);
 });

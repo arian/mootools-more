@@ -59,14 +59,14 @@ describe('Validation', function(){
 		var errors = validation.getErrorCodes();
 
 		for (var i = 0, l = errors.length; i < l; i++){
-			expect(errors[i][1]).toEqual('foo');
+			expect(errors[i].value).toEqual('foo');
 		}
 
 		expect(errors.map(function(error){
-			return error[0];
+			return error.name;
 		})).toEqual(ruleNames);
 
-		expect(errors[3][2]).toEqual('testArgument');
+		expect(errors[3].args).toEqual('testArgument');
 	});
 
 	describe('Default Rules', function(){
@@ -81,14 +81,14 @@ describe('Validation', function(){
 
 		it('should test the minLength rule', function(){
 			var validation = new Validation();
-			validation.addRule('minLength', {min: 4});
+			validation.addRule('minLength', {minLength: 4});
 			expect(validation.validate('mooing')).toBeTruthy();
 			expect(validation.validate('moo')).toBeFalsy();
 		});
 
 		it('should test the maxLength rule', function(){
 			var validation = new Validation();
-			validation.addRule('maxLength', {max: 4});
+			validation.addRule('maxLength', {maxLength: 4});
 			expect(validation.validate('moo')).toBeTruthy();
 			expect(validation.validate('mooing')).toBeFalsy();
 		});

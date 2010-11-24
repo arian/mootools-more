@@ -30,7 +30,6 @@ var Validation = this.Validation = new Class({
 	},
 
 	rules: [],
-	rulesArgs: [],
 
 	initialize: function(rules, options){
 		this.setOptions(options);
@@ -39,15 +38,20 @@ var Validation = this.Validation = new Class({
 
 	addRule: function(rule, args){
 		if (Type.isString(rule)) rule = Validation.Rules[rule];
-		if (rule && !this.rules.contains(rule)){
-			this.rules.push(rule);
-			this.rulesArgs.push(args);
+		if (Type.isFunction(rule)) rule = {
+			name: null,
+			fn: rule
+		};
+		if (rule && rule.fn){
+			rule.args = args;
+			this.rules.include(rule);
 		}
+		return this;
 	},
 
 	addRules: function(rules){
-		for (var i = 0, l = rules.length; i < l; i++)
-			this.addRule(rules[i]);
+		for (var i = 0, l = rules.length; i < l; i++) this.addRule(rules[i]);
+		return this;
 	},
 
 	validate: function(value, allowEmpty){
@@ -59,12 +63,17 @@ var Validation = this.Validation = new Class({
 
 		var rules = this.rules,
 			result,
-			args;
+			rule;
 
 		for (var i = 0, l = rules.length; i < l; i++){
-			args = this.rulesArgs[i];
-			result = rules[i].call(null, value, args);
-			if (result != true) errors.push([result, value, args]);
+			rule = rules[i];
+			result = rule.fn(value, rule.args);
+			if (result != true) errors.push({
+				name: rule.name,
+				result: result,
+				value: value,
+				args: rule.args
+			});
 		}
 
 		this.errors = errors;
@@ -77,7 +86,7 @@ var Validation = this.Validation = new Class({
 
 	getErrors: function(fn){
 		if (!fn) fn = function(error){
-			return error[0];
+			return error.name;
 		};
 		return this.getErrorCodes().map(fn);
 	}
@@ -89,8 +98,9 @@ var Validation = this.Validation = new Class({
 Validation.Rules = {};
 
 Validation.defineRule = function(name, fn){
-	Validation.Rules[name] = function(){
-		return fn.apply(null, arguments) || name;
+	Validation.Rules[name] = {
+		name: name,
+		fn: fn
 	};
 };
 

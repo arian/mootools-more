@@ -46,10 +46,10 @@ Validation.defineRules(Object.map({
 Validation.defineRules({
 
 	date: function(value, args){
-		var props = args[0] || {},
-			d;
+		var d;
+		if (!args) args = {};
 		if (Date.parse){
-			var format = props.dateFormat || '%x';
+			var format = args.dateFormat || '%x';
 			d = Date.parse(value);
 			return !isNaN(d);
 		} else {
