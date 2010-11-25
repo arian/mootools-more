@@ -94,6 +94,11 @@ var Validation = this.Validation = new Class({
 });
 
 
+Validation.validate = function(rule, value){
+	return new Validation(rule).validate(value);
+};
+
+
 // Define Validation Rules
 Validation.Rules = {};
 

@@ -62,6 +62,15 @@ describe('Validation', function(){
 		expect(errors[3].args).toEqual('testArgument');
 	});
 
+	it('should test the Validation.validate shortcut', function(){
+		expect(Validation.validate({
+			name: 'between',
+			args: {min: 3, max: 6}
+		}, 5)).toBeTruthy();
+		expect(Validation.validate('empty', '')).toBeTruthy();
+		expect(Validation.validate('empty', 'asdf')).toBeFalsy();
+	});
+
 	describe('Default Rules', function(){
 
 		it('should test the between rule', function(){
