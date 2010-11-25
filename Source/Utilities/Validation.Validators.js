@@ -27,7 +27,7 @@ Validation.defineRules(Object.map({
 	numeric: /^-?(?:0$0(?=\d*\.)|[1-9]|0)\d*(\.\d+)?$/,
 	digits: /^[\d() .:\-\+#]+$/,
 	alpha: /^[a-zA-Z]+$/,
-	alpanum: /\W/,
+	alphanum: /^[a-z0-9]+$/i,
 	email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
 	url: /^(https?|ftp|rmtp|mms):\/\/(([A-Z0-9][A-Z0-9_-]*)(\.[A-Z0-9][A-Z0-9_-]*)+)(:(\d+))?\/?/i,
 
@@ -49,16 +49,17 @@ Validation.defineRules({
 		var d;
 		if (!args) args = {};
 		if (Date.parse){
-			var format = args.dateFormat || '%x';
 			d = Date.parse(value);
-			return !isNaN(d);
+			return d.isValid();
 		} else {
-			var regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+			var regex = args.formatRegex || /^(\d{2})\/(\d{2})\/(\d{4})$/;
 			if (!regex.test(value)) return false;
 			d = new Date(value.replace(regex, '$1/$2/$3'));
-			return (parseInt(RegExp.$1, 10) == (1 + d.getMonth())) &&
-				(parseInt(RegExp.$2, 10) == d.getDate()) &&
-				(parseInt(RegExp.$3, 10) == d.getFullYear());
+			return (
+				parseInt(RegExp.$1) == (1 + d.getMonth())) &&
+				(parseInt(RegExp.$2) == d.getDate()) &&
+				(parseInt(RegExp.$3) == d.getFullYear()
+			);
 		}
 	}
 

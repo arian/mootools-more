@@ -45,7 +45,8 @@ Configuration.sets = {
 			'Types/Hash', 'Types/Hash.Extras', 'Types/Date',
 			'Types/Date.Extras', 'Locale/Locale',
 			'Utilities/Color', 'Utilities/Group', 'Utilities/Table',
-			'Utilities/Validation', 'Utilities/Validation.JSONSchema'
+			'Utilities/Validation', 'Utilities/Validation.Validators',
+			'Utilities/Validation.JSONSchema'
 		]
 	},
 
