@@ -18,12 +18,6 @@ describe('Validation', function(){
 		var validation = new Validation();
 		validation.addRule('empty');
 		expect(validation.rules.length).toEqual(1);
-		// Don't add a rule twice
-		validation.addRule('empty');
-		expect(validation.rules.length).toEqual(1);
-		// Now add another rule
-		validation.addRule('between');
-		expect(validation.rules.length).toEqual(2);
 	});
 
 	it('should define, add and validate a rule with arguments', function(){
@@ -31,8 +25,10 @@ describe('Validation', function(){
 		Validation.defineRule('MyTestingRuleWithArgs', spy);
 
 		var value = 'MyTestValue', args = [1, 2, 3];
-		var validation = new Validation();
-		validation.addRule('MyTestingRuleWithArgs', args);
+		var validation = new Validation({
+			name: 'MyTestingRuleWithArgs',
+			args: args
+		});
 		validation.validate(value);
 
 		expect(spy).toHaveBeenCalledWith(value, args);
@@ -52,17 +48,14 @@ describe('Validation', function(){
 		];
 
 		var validation = new Validation(ruleNames);
-		validation.addRule('MyErrorNamesTest4', 'testArgument');
+		validation.addRule({name: 'MyErrorNamesTest4', args: 'testArgument'});
 		ruleNames.push('MyErrorNamesTest4')
 
 		validation.validate('foo');
 		var errors = validation.getErrorCodes();
 
-		for (var i = 0, l = errors.length; i < l; i++){
-			expect(errors[i].value).toEqual('foo');
-		}
-
 		expect(errors.map(function(error){
+			expect(error.value).toEqual('foo');
 			return error.name;
 		})).toEqual(ruleNames);
 

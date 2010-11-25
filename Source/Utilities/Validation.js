@@ -37,15 +37,15 @@ var Validation = this.Validation = new Class({
 	},
 
 	addRule: function(rule, args){
-		if (Type.isString(rule)) rule = Validation.Rules[rule];
-		if (Type.isFunction(rule)) rule = {
-			name: null,
-			fn: rule
-		};
-		if (rule && rule.fn){
-			rule.args = args;
-			this.rules.include(rule);
+		var type = typeOf(rule);
+		if (type != 'object'){
+			if (type == 'string') rule = {name: rule};
+			else if (type == 'function') rule = {fn: rule};
+			else rule = {};
 		}
+		if (rule && rule.name && !rule.fn) rule = Object.merge(rule, Validation.Rules[rule.name]);
+		if (args != null) rule.args = args;
+		if (rule && rule.fn) this.rules.include(rule);
 		return this;
 	},
 
@@ -88,7 +88,7 @@ var Validation = this.Validation = new Class({
 		if (!fn) fn = function(error){
 			return error.name;
 		};
-		return this.getErrorCodes().map(fn);
+		return (this.errors || []).map(fn);
 	}
 
 });
