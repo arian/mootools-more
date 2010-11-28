@@ -21,6 +21,18 @@ provides: [Validation]
 
 (function(){
 
+var ruleObjectOf = function(rule, args){
+	var type = typeOf(rule);
+	if (type != 'object'){
+		if (type == 'string') rule = {name: rule};
+		else if (type == 'function') rule = {fn: rule};
+		else rule = {};
+	}
+	if (rule && rule.name && !rule.fn) rule = Object.merge(rule, Validation.Rules[rule.name]);
+	if (args != null) rule.args = args;
+	return (rule && rule.fn) ? rule : null;
+};
+
 var Validation = this.Validation = new Class({
 
 	Implements: Options,
@@ -37,15 +49,8 @@ var Validation = this.Validation = new Class({
 	},
 
 	addRule: function(rule, args){
-		var type = typeOf(rule);
-		if (type != 'object'){
-			if (type == 'string') rule = {name: rule};
-			else if (type == 'function') rule = {fn: rule};
-			else rule = {};
-		}
-		if (rule && rule.name && !rule.fn) rule = Object.merge(rule, Validation.Rules[rule.name]);
-		if (args != null) rule.args = args;
-		if (rule && rule.fn) this.rules.include(rule);
+		var rule = ruleObjectOf(rule, args);
+		if (rule) this.rules.include(rule);
 		return this;
 	},
 
@@ -93,9 +98,11 @@ var Validation = this.Validation = new Class({
 
 });
 
-
+// A shortcut if only true/false is needed
 Validation.validate = function(rule, value){
-	return new Validation(rule).validate(value);
+	var rule = ruleObjectOf(rule);
+	if (!rule) return false;
+	return rule.fn(value, rule.args);
 };
 
 
