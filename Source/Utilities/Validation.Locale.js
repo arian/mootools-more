@@ -21,14 +21,14 @@ provides: [Validation.Locale]
 
 (function(){
 
-// Errors
-Validation.implement('getErrors', function(fn){
+// Error handling
+Validation.implement('getLocaleErrors', function(fn){
 	if (!fn) fn = function(error){
 		var args = error.args || {};
 		args.value = error.value;
 		return Locale.get('Validation.' + error.name, args).substitute(args);
 	};
-	return this.getErrorCodes().map(fn);
+	return (this.errors || []).map(fn);
 });
 
 
@@ -37,18 +37,18 @@ var localizedRules = ['postcode'],
 	trueFunction = Function.from(true);
 
 var setLocalizedRules = function(){
-	var rule,
-		l = localizedRules.length;
+	var l = localizedRules.length,
+		rule;
 
 	while (l--){
 		rule = Locale.get('Validation.rules.' + localizedRules[l]);
-		Validation.Rules[localizedRules[l]] = rule || trueFunction;
+		if (typeOf(rule) == 'regexp') Validation.defineRegExpRule(localizedRules[l], rule);
+		else Validation.defineRule(localizedRules[l], rule || trueFunction);
 	}
+	return setLocalizedRules;
 };
 
-setLocalizedRules();
-
 // If Locale.use is called, we need to get the localized rules again
-Locale.addEvent('change', setLocalizedRules);
+Locale.addEvent('change', setLocalizedRules());
 
 })();

@@ -21,7 +21,7 @@ provides: [Validation.Validators]
 (function(){
 
 
-Validation.defineRules(Object.map({
+Validation.defineRegExpRules({
 
 	integer: /^(-?[1-9]\d*|0)$/,
 	numeric: /^-?(?:0$0(?=\d*\.)|[1-9]|0)\d*(\.\d+)?$/,
@@ -37,32 +37,22 @@ Validation.defineRules(Object.map({
 	// [$].##
 	currencyDollar: /^\$?\-?([1-9]{1}[0-9]{0,2}(\,[0-9]{3})*(\.[0-9]{0,2})?|[1-9]{1}\d*(\.[0-9]{0,2})?|0(\.[0-9]{0,2})?|(\.[0-9]{1,2})?)$/
 
-}, function(regex){
-	return function(value){
-		return regex.test(value);
-	};
-}));
+});
 
-Validation.defineRules({
 
-	date: function(value, args){
-		var d;
-		if (!args) args = {};
-		if (Date.parse){
-			d = Date.parse(value);
-			return d.isValid();
-		} else {
-			var regex = args.formatRegex || /^(\d{2})\/(\d{2})\/(\d{4})$/;
-			if (!regex.test(value)) return false;
-			d = new Date(value.replace(regex, '$1/$2/$3'));
-			return (
-				parseInt(RegExp.$1) == (1 + d.getMonth())) &&
-				(parseInt(RegExp.$2) == d.getDate()) &&
-				(parseInt(RegExp.$3) == d.getFullYear()
-			);
-		}
-	}
+Validation.defineRule('date', function(value, options){
+	if (Date.parse) return Date.parse(value).isValid();
 
+	var regex = (options && options.formatRegex) || /^(\d{2})\/(\d{2})\/(\d{4})$/,
+		date;
+	if (!regex.test(value)) return false;
+	date = new Date(value.replace(regex, '$1/$2/$3'));
+
+	return (
+		(parseInt(RegExp.$1) == (1 + date.getMonth()))) &&
+		(parseInt(RegExp.$2) == date.getDate()) &&
+		(parseInt(RegExp.$3) == date.getFullYear()
+	);
 });
 
 })();

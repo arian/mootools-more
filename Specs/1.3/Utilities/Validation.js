@@ -27,7 +27,7 @@ describe('Validation', function(){
 		var value = 'MyTestValue', args = [1, 2, 3];
 		var validation = new Validation({
 			name: 'MyTestingRuleWithArgs',
-			args: args
+			args: [args]
 		});
 		validation.validate(value);
 
@@ -41,25 +41,26 @@ describe('Validation', function(){
 			MyErrorNamesTest3: Function.from(false),
 			MyErrorNamesTest4: Function.from(false)
 		});
+
 		var ruleNames = [
 			'MyErrorNamesTest1',
 			'MyErrorNamesTest2',
-			'MyErrorNamesTest3'
+			'MyErrorNamesTest3',
+			'MyErrorNamesTest4'
 		];
 
-		var validation = new Validation(ruleNames);
-		validation.addRule({name: 'MyErrorNamesTest4', args: 'testArgument'});
-		ruleNames.push('MyErrorNamesTest4')
+		var val = new Validation(ruleNames.slice(0, 3));
+		val.addRule('MyErrorNamesTest4', 'testArgument');
 
-		validation.validate('foo');
-		var errors = validation.getErrorCodes();
+		val.validate('foo');
+		var errors = val.getErrors();
 
-		expect(errors.map(function(error){
+		errors.each(function(error, i){
 			expect(error.value).toEqual('foo');
-			return error.name;
-		})).toEqual(ruleNames);
+			expect(error.name).toEqual(ruleNames[i]);
+		});
 
-		expect(errors[3].args).toEqual('testArgument');
+		expect(errors[3].args).toEqual(['testArgument']);
 	});
 
 	it('should test the Validation.validate shortcut', function(){
@@ -69,9 +70,50 @@ describe('Validation', function(){
 		}, 5)).toBeTruthy();
 		expect(Validation.validate('empty', '')).toBeTruthy();
 		expect(Validation.validate('empty', 'asdf')).toBeFalsy();
+		expect(Validation.validate('between', 5, {min: 3, max:6})).toBeTruthy();
+	});
+
+	it('should validate when a defined rule returns a object', function(){
+		var returnedErrors = [1, 2, 3];
+		Validation.defineRule('ObjectRule', function(){
+			return {valid: false, errors: returnedErrors};
+		});
+
+		// Shortcut function
+		expect(Validation.validate('ObjectRule', 'moo')).toBeFalsy();
+
+		// using the Validation Class
+		var val = new Validation('ObjectRule');
+		expect(val.validate('moo')).toBeFalsy();
+
+		// Checking the errors
+		val.getErrors().each(function(error, i){
+			expect(error.error).toEqual(returnedErrors[i]);
+			expect(error.name).toEqual('ObjectRule');
+			expect(error.value).toEqual('moo');
+		});
 	});
 
 	describe('Default Rules', function(){
+
+		it('should test the empty rule', function(){
+			var val = new Validation('empty');
+			expect(val.validate('')).toBeTruthy();
+			expect(val.validate('meh')).toBeFalsy();
+		});
+
+		it('should test the required rule', function(){
+			var val = new Validation('required');
+			expect(val.validate('foo')).toBeTruthy();
+			expect(val.validate('')).toBeFalsy();
+		});
+
+		it('should test the equals rule', function(){
+			var val = new Validation();
+			val.addRule('equals', {equals: 'mootools'});
+			expect(val.validate('mootools')).toBeTruthy();
+			expect(val.validate('moo')).toBeFalsy();
+		});
 
 		it('should test the between rule', function(){
 			var validation = new Validation();

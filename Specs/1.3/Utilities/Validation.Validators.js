@@ -75,7 +75,7 @@ describe('Validation.Validators', function(){
 	it('validates a date', function(){
 		var val = new Validation('date');
 		expect(val.validate('03/20/2010')).toBeTruthy();
-		expect(val.validate('validationg')).toBeFalsy();
+		expect(val.validate('validating')).toBeFalsy();
 	});
 
 });

@@ -29,9 +29,7 @@ Locale.define('nl-NL', 'Validation', {
 	},
 
 	rules: {
-		postcode: function(value){
-			return (/^[1-9]{1}[0-9]{3}\s?[A-Za-z]{2}$/).test(value);
-		}
+		postcode: /^[1-9]{1}[0-9]{3}\s?[A-Za-z]{2}$/
 	}
 
 }).setOptions({

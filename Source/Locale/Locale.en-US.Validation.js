@@ -29,9 +29,7 @@ Locale.define('en-US', 'Validation', {
 	},
 
 	rules: {
-		postcode: function(value){
-			return (/^\d{5}(-\d{4})?$/).test(value) || 'postcode';
-		}
+		postcode: /^\d{5}(-\d{4})?$/
 	}
 
 }).setOptions({

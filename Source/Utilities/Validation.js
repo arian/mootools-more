@@ -28,8 +28,15 @@ var ruleObjectOf = function(rule, args){
 		else if (type == 'function') rule = {fn: rule};
 		else rule = {};
 	}
-	if (rule && rule.name && !rule.fn) rule = Object.merge(rule, Validation.Rules[rule.name]);
-	if (args != null) rule.args = args;
+
+	if (rule && rule.name && !rule.fn){
+		rule = Object.merge(rule, Validation.Rules[rule.name]);
+	}
+
+	if (args != null){
+		args = Array.from(args);
+		if (args.length) rule.args = args;
+	}
 	return (rule && rule.fn) ? rule : null;
 };
 
@@ -48,8 +55,8 @@ var Validation = this.Validation = new Class({
 		if (rules) this.addRules(Array.from(rules));
 	},
 
-	addRule: function(rule, args){
-		var rule = ruleObjectOf(rule, args);
+	addRule: function(rule){
+		var rule = ruleObjectOf(rule, Array.slice(arguments, 1));
 		if (rule) this.rules.include(rule);
 		return this;
 	},
@@ -68,78 +75,98 @@ var Validation = this.Validation = new Class({
 
 		var rules = this.rules,
 			result,
-			rule;
+			rule,
+			valid;
 
 		for (var i = 0, l = rules.length; i < l; i++){
 			rule = rules[i];
-			result = rule.fn(value, rule.args);
-			if (result != true) errors.push({
-				name: rule.name,
-				result: result,
-				value: value,
-				args: rule.args
-			});
+			valid = result = rule.fn.apply(rule, [value].concat(rule.args));
+
+			if (Type.isObject(result)){
+				valid = result.valid;
+				result = result.errors;
+			}
+
+			if (valid != true){
+				result = Array.from(result);
+				for (var j = 0, m = result.length; j < m; j++) errors.push({
+					name: rule.name,
+					error: result[j],
+					value: value,
+					args: rule.args
+				});
+			}
 		}
 
 		this.errors = errors;
 		return !errors.length;
 	},
 
-	getErrorCodes: function(){
-		return this.errors || [];
-	},
-
 	getErrors: function(fn){
-		if (!fn) fn = function(error){
-			return error.name;
-		};
-		return (this.errors || []).map(fn);
+		var errors = this.errors || [];
+		if (!fn) return errors;
+		return errors.map(fn);
 	}
 
 });
 
+
 // A shortcut if only true/false is needed
 Validation.validate = function(rule, value){
-	var rule = ruleObjectOf(rule);
+	var rule = ruleObjectOf(rule, Array.slice(arguments, 2));
 	if (!rule) return false;
-	return rule.fn(value, rule.args);
+
+	var result = rule.fn.apply(rule, [value].concat(rule.args));
+	return !!(result.valid != null) ? result.valid : result;
 };
 
 
 // Define Validation Rules
 Validation.Rules = {};
 
-Validation.defineRule = function(name, fn){
+Validation.defineRule = function(name, rule){
 	Validation.Rules[name] = {
 		name: name,
-		fn: fn
+		fn: rule
 	};
+	return this;
 };
-
-Validation.defineRule('empty', function(value){
-	return (value == null || value == '');
-});
-
 Validation.defineRules = Validation.defineRule.overloadSetter();
 
+// Easy defining regular expressions as rules
+Validation.defineRegExpRule = function(name, regex){
+	Validation.defineRule(name, function(value){
+		return regex.test(value);
+	});
+};
+Validation.defineRegExpRules = Validation.defineRegExpRule.overloadSetter();
 
-// Defining default rules (probably only very basic, and provide additional rules in a separate file)
+
+// Defining default rules
 Validation.defineRules({
+
+	empty: function(value){
+		return (value == null || value == '');
+	},
 
 	required: function(value){
 		return value != null && value != '';
 	},
 
-	between: function(value, args){
-		return (value > args.min && value < args.max);
+	equals: function(value, options){
+		return value == options.equals;
 	},
 
-	minLength: function(value, args){
-		return (value.length >= args.minLength);
+	between: function(value, options){
+		return (value > options.min && value < options.max);
 	},
 
-	maxLength: function(value, args){
-		return (value.length <= args.maxLength);
+	minLength: function(value, options){
+		return (value.length >= options.minLength);
+	},
+
+	maxLength: function(value, options){
+		return (value.length <= options.maxLength);
 	}
 });
 
