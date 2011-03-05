@@ -22,13 +22,13 @@ provides: [Validation.Locale]
 (function(){
 
 // Error handling
-Validation.implement('getLocaleErrors', function(fn){
+Validation.extend('reportLocale', function(failed, fn){
 	if (!fn) fn = function(error){
 		var args = error.args || {};
 		args.value = error.value;
 		return Locale.get('Validation.' + error.name, args).substitute(args);
 	};
-	return (this.errors || []).map(fn);
+	return (failed || []).map(fn);
 });
 
 

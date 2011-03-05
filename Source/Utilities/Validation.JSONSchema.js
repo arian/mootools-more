@@ -235,7 +235,7 @@ var validate = function(instance, schema, _changing) {
 	if (!_changing && instance && instance.$schema) checkProp(instance, instance.$schema, '', '');
 
 	return {
-		valid: !errors.length,
+		passed: !errors.length,
 		errors: errors
 	};
 
@@ -246,13 +246,13 @@ Validation.defineRules({
 
 	jsonschema: function(instance, schema){
 		return validate(instance, schema, false);
-	},
-
-	jsonschemapropertychange: function(instance, schema, property){
-		return validate(instance, schema, property || 'property');
 	}
 
 });
+
+Validation.validateJSON = function(instance, schema, _property){
+	return validate(instance, schema, _property).passed;
+};
 
 
 })();

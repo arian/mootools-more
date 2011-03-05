@@ -20,21 +20,21 @@ describe('Validation', function(){
 		expect(validation.rules.length).toEqual(1);
 	});
 
-	it('should define, add and validate a rule with arguments', function(){
-		var spy = jasmine.createSpy('MyTestingRuleWithArgs');
-		Validation.defineRule('MyTestingRuleWithArgs', spy);
+	it('should define, add and validate a rule with options', function(){
+		var spy = jasmine.createSpy('MyTestingRuleWithOptions');
+		Validation.defineRule('MyTestingRuleWithOptions', spy);
 
-		var value = 'MyTestValue', args = [1, 2, 3];
+		var value = 'MyTestValue', options = {first: 1, second: 2, third: 3};
 		var validation = new Validation({
-			name: 'MyTestingRuleWithArgs',
-			args: [args]
+			name: 'MyTestingRuleWithOptions',
+			options: options
 		});
 		validation.validate(value);
 
-		expect(spy).toHaveBeenCalledWith(value, args);
+		expect(spy).toHaveBeenCalledWith(value, options);
 	});
 
-	it('should return a array with the failed rules', function(){
+	it('should fire the failure event with the failed rules', function(){
 		Validation.defineRules({
 			MyErrorNamesTest1: Function.from(false),
 			MyErrorNamesTest2: Function.from(false),
@@ -49,34 +49,41 @@ describe('Validation', function(){
 			'MyErrorNamesTest4'
 		];
 
+		var testOption = {foo: 'testOption'};
+
 		var val = new Validation(ruleNames.slice(0, 3));
-		val.addRule('MyErrorNamesTest4', 'testArgument');
+		val.addRule('MyErrorNamesTest4', testOption);
 
-		val.validate('foo');
-		var errors = val.getErrors();
-
-		errors.each(function(error, i){
-			expect(error.value).toEqual('foo');
-			expect(error.name).toEqual(ruleNames[i]);
+		var errors = [];
+		val.addEvent('failure', function(rules){
+			errors = rules;
 		});
 
-		expect(errors[3].args).toEqual(['testArgument']);
+		var res = val.validate('foo');
+
+		expect(res).toEqual(false);
+
+		errors.each(function(error, i){
+			expect(error.name).toEqual(ruleNames[i]);
+			expect(error.value).toEqual('foo');
+		});
+
+		expect(errors[3].options).toEqual(testOption);
 	});
 
 	it('should test the Validation.validate shortcut', function(){
 		expect(Validation.validate({
 			name: 'between',
-			args: {min: 3, max: 6}
+			options: {min: 3, max: 6}
 		}, 5)).toBeTruthy();
 		expect(Validation.validate('empty', '')).toBeTruthy();
 		expect(Validation.validate('empty', 'asdf')).toBeFalsy();
-		expect(Validation.validate('between', 5, {min: 3, max:6})).toBeTruthy();
 	});
 
 	it('should validate when a defined rule returns a object', function(){
 		var returnedErrors = [1, 2, 3];
 		Validation.defineRule('ObjectRule', function(){
-			return {valid: false, errors: returnedErrors};
+			return {passed: false, errors: returnedErrors};
 		});
 
 		// Shortcut function
@@ -92,6 +99,38 @@ describe('Validation', function(){
 			expect(error.name).toEqual('ObjectRule');
 			expect(error.value).toEqual('moo');
 		});
+	});
+
+	describe('Async Rules', function(){
+
+		Validation.defineAsyncRule('async1', function(value, options, progress){
+			progress.delay(2, null, options.val && value == options.val);
+		});
+		Validation.defineAsyncRule('async2', function(value, options, progress){
+			progress.delay(2, null, options.res);
+		});
+
+		it('should validate the asyn rules', function(){
+
+			var success = jasmine.createSpy('success'),
+				failure = jasmine.createSpy('failure'),
+				progress = jasmine.createSpy('progress');
+
+			Validation.validate([
+				{name: 'async1', options: {val: 'foo'}},
+				{name: 'async2', options: {res: true}}
+			], 'foo', success, failure, progress);
+
+			waits(30);
+
+			runs(function(){
+				expect(success).toHaveBeenCalled();
+				expect(failure).not.toHaveBeenCalled();
+				expect(progress.callCount).toEqual(2);
+			});
+
+		});
+
 	});
 
 	describe('Default Rules', function(){
