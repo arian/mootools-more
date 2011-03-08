@@ -34,7 +34,8 @@ var Validation = this.Validation = new Class({
 	rules: [],
 	failed: [],
 
-	initialize: function(rules){
+	initialize: function(rules, options){
+		this.setOptions(options);
 		if (rules) this.addRules(Array.from(rules));
 	},
 
@@ -61,15 +62,12 @@ var Validation = this.Validation = new Class({
 			passed = [], progressed = [], failed = [],
 			self = this;
 
-		var getResult = function(result, rule){
-			if (!Type.isObject(result)) result = {passed: result};
-			Object.append(result, {rule: rule, name: rule.name, value: value, options: rule.options});
-			return result;
-		};
-
 		var progress = function(result){
 			if (!rule) return;
-			result = getResult(result, rule);
+
+			if (!Type.isObject(result)) result = {passed: result};
+			Object.append(result, {rule: rule, name: rule.name, value: value, options: rule.options});
+
 			progressed.push(result);
 			(result.passed ? passed : failed).push(result);
 			self.fireEvent('progress', [result, progressed, passed, failed, rules]);
@@ -110,11 +108,12 @@ var Validation = this.Validation = new Class({
 				return (typeOf(result) == 'object') ? result.passed : result;
 			}
 		}
-		var validation =  new Validation(rules, options);
-		if (success) validation.addEvent('success', success);
-		if (failure) validation.addEvent('failure', failure);
-		if (progress) validation.addEvent('progress', progress);
-		return validation.validate(value);
+		options = Object.merge({}, options || {}, {
+			onSuccess: success,
+			onFailure: failure,
+			onProgress: progress
+		});
+		return (new Validation(rules, options)).validate(value);
 	},
 
 	defineRule: function(name, rule, options){
