@@ -57,7 +57,7 @@ var Validation = this.Validation = new Class({
 		var old = this.options;
 		options = Object.append({stopOnFail: old.stopOnFail}, options);
 
-		var rules = this.rules, length = rules.length,
+		var rules = this.rules, rule, length = rules.length,
 			passed = [], progressed = [], failed = [],
 			self = this;
 
@@ -67,30 +67,29 @@ var Validation = this.Validation = new Class({
 			return result;
 		};
 
-		var progress = function(rule){
-			return function(result){
-				result = getResult(result, rule);
-				progressed.push(result);
-				(result.passed ? passed : failed).push(result);
-				self.fireEvent('progress', [result, progressed, passed, failed, rules]);
-				if (passed.length == length){ // all rules passed
-					self.fireEvent('success', [passed]);
-				} else if (
-					(!result && options.stopOnFail) // first one failed
-					|| (progressed.length == length) // all failed
-				){
-					this.failed = failed;
-					self.fireEvent('failure', [failed]);
-				} else { // validate next rule
-					validate(); 
-				}
-			};
+		var progress = function(result){
+			if (!rule) return;
+			result = getResult(result, rule);
+			progressed.push(result);
+			(result.passed ? passed : failed).push(result);
+			self.fireEvent('progress', [result, progressed, passed, failed, rules]);
+			if (passed.length == length){ // all rules passed
+				self.fireEvent('success', [passed]);
+			} else if (
+				(!result && options.stopOnFail) // first one failed
+				|| (progressed.length == length) // all failed
+			){
+				this.failed = failed;
+				self.fireEvent('failure', [failed]);
+			} else { // validate next rule
+				validate();
+			}
 		};
 
 		var validate = function(){
-			var rule = rules[progressed.length];
-			if (rule.async) rule.rule.call(self, value, rule.options, progress(rule));
-			else progress(rule)(rule.rule.call(self, value, rule.options));
+			rule = rules[progressed.length];
+			if (rule.async) rule.rule.call(self, value, rule.options, progress);
+			else progress(rule.rule.call(self, value, rule.options));
 		};
 		validate();
 
@@ -104,6 +103,13 @@ var Validation = this.Validation = new Class({
 }).extend({
 
 	validate: function(rules, value, success, failure, progress, options){
+		if (arguments.length == 2 && typeOf(rules) != 'array'){
+			var rule = Validation.lookupRule(rules);
+			if (!rule.async){
+				var result = rule.rule(value, rule.options);
+				return (typeOf(result) == 'object') ? result.passed : result;
+			}
+		}
 		var validation =  new Validation(rules, options);
 		if (success) validation.addEvent('success', success);
 		if (failure) validation.addEvent('failure', failure);
